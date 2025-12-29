@@ -88,7 +88,6 @@ if __name__ == '__main__':
             unrecoverable_error = True
     if unrecoverable_error:
         sys.exit(1)
-        
 
     consumer_bootstrap_1 = os.getenv("CONSUMER_BOOTSTRAP_1").split(",")
     consumer_bootstrap_2 = os.getenv("CONSUMER_BOOTSTRAP_2").split(",")
@@ -96,6 +95,14 @@ if __name__ == '__main__':
     ssl_cert_file = os.getenv("SSL_CERT_FILE")
     ssl_key_file = os.getenv("SSL_KEY_FILE")
     ssl_ca_file = os.getenv("SSL_CA_FILE")
+
+    # make sure files are present and send a human-understandable error if they are not
+    for each_file in [ssl_cert_file, ssl_key_file, ssl_ca_file]:
+        if not os.path.exists(each_file):
+            logging.critical(f"{each_file} is specified in .env configuration but is not found in this directory. Cannot continue")
+            unrecoverable_error = True
+    if unrecoverable_error:
+        sys.exit(1)
 
     kafka_config = KafkaConfig(consumer_bootstrap_1, 
                                consumer_bootstrap_2, 
@@ -109,6 +116,6 @@ if __name__ == '__main__':
     consumer_thread.start()
     
     # Start Flask server
-    print("Starting SSE server on http://0.0.0.0:5000")
-    print("Connect to http://localhost:5000/events to receive messages")
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+    print("Starting SSE server on http://0.0.0.0:8000")
+    print("Connect to http://localhost:8000/events to receive messages")
+    app.run(host='0.0.0.0', port=8000, threaded=True)
