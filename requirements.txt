@@ -1,0 +1,4 @@
+kafka-python-ng==2.2.3
+flask==3.0.0
+python-dotenv==1.2.1
+dataclasses==0.6
