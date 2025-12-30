@@ -22,6 +22,7 @@ class KafkaConfig:
     consumer_bootstrap_1: list[str]
     consumer_bootstrap_2: list[str]
     kafka_topic: str
+    keystore_password: str
     ssl_cert_file: str
     ssl_key_file: str
     ssl_ca_file: str
@@ -32,7 +33,7 @@ def kafka_consumer_thread(kafka_config: KafkaConfig) -> None:
     """Background thread to consume Kafka messages"""
     consumer = KafkaConsumer(
         kafka_config.kafka_topic,
-        bootstrap_servers=kafka_config.consumer_bootstrap_1,
+        bootstrap_servers=kafka_config.consumer_bootstrap_2,
         security_protocol='SSL',
         ssl_certfile=kafka_config.ssl_cert_file,
         ssl_keyfile=kafka_config.ssl_key_file,
@@ -42,10 +43,10 @@ def kafka_consumer_thread(kafka_config: KafkaConfig) -> None:
         value_deserializer=lambda m: m.decode('utf-8')
     )
     
-    logging.info(f"Connected to Kafka, subscribed to topic: {kafka_config.kafka_topic}")
+    logging.warning(f"Connected to Kafka, subscribed to topic: {kafka_config.kafka_topic}")
     
     for message in consumer:
-        logging.debug(f"Received message: {message.value}")
+        logging.info(f"Received message: {message.value}")
         # Put message in queue for all SSE clients
         message_queue.put(message.value)
 
@@ -75,7 +76,8 @@ if __name__ == '__main__':
     unrecoverable_error = False
     for variable_name in ["CONSUMER_BOOTSTRAP_1", 
                           "CONSUMER_BOOTSTRAP_2", 
-                          "KAFKA_TOPIC", 
+                          "KAFKA_TOPIC",
+                          "KEYSTORE_PASSWORD",
                           "SSL_CERT_FILE",
                           "SSL_KEY_FILE",
                           "SSL_CA_FILE"]:
@@ -92,6 +94,7 @@ if __name__ == '__main__':
     consumer_bootstrap_1 = os.getenv("CONSUMER_BOOTSTRAP_1").split(",")
     consumer_bootstrap_2 = os.getenv("CONSUMER_BOOTSTRAP_2").split(",")
     kafka_topic = os.getenv("KAFKA_TOPIC")
+    keystore_password = os.getenv("KEYSTORE_PASSWORD")
     ssl_cert_file = os.getenv("SSL_CERT_FILE")
     ssl_key_file = os.getenv("SSL_KEY_FILE")
     ssl_ca_file = os.getenv("SSL_CA_FILE")
@@ -106,7 +109,8 @@ if __name__ == '__main__':
 
     kafka_config = KafkaConfig(consumer_bootstrap_1, 
                                consumer_bootstrap_2, 
-                               kafka_topic, 
+                               kafka_topic,
+                               keystore_password, 
                                ssl_cert_file, 
                                ssl_key_file, 
                                ssl_ca_file)
