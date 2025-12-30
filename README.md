@@ -9,7 +9,7 @@ In your ServiceNow instance, navigate to `All -> Certificate Generator -> Instan
 - Download the keystore (`keystore.p12`)
 - Download the Truststore (`truststore.p12`)
 
-![Screenshot of the Instance PKI Certificate Generator page in a sample ServiceNow instance.][pki_cert_screenshot.png]
+![Screenshot of the Instance PKI Certificate Generator page in a sample ServiceNow instance.](./pki_cert_screenshot.png)
 
 # Turn Java keystores into PEM files
 ServiceNow exports keys in Java Keystore format but the python library expects PEM format. We need to extract the keys from `keystore.p12` and `truststore.p12` in the right format. 
@@ -54,6 +54,16 @@ SSL_CERT_FILE=./certs/client-cert-chain.pem
 SSL_KEY_FILE=./certs/client-key.pem
 ```
 
+## Troubleshooting
+
+**"no certificate or crl found" error:**
+- Verify the CA certificate file exists and contains valid certificates
+- Check that you extracted all certificates from the truststore
+
+**"certificate unknown" error:**
+- Ensure you extracted the full certificate chain (use `-nokeys` not `-clcerts`)
+- Verify the certificate hasn't expired: `openssl x509 -in client-cert-chain.pem -noout -dates`
+
 # Get information for your connection
 ## Bootstrap urls
 - In your ServiceNow instance, navigate to `All -> Hermes Messaging Service -> Diagnostics`
@@ -68,7 +78,7 @@ CONSUMER_BOOTSTRAP_2="different,comma,separated,list,of,hosts"
 ```
 
 # Application setup
-Initialize your python environment 
+If you are using a python virtual environment, initialize your python environment 
 
 `source bin/activate`
 
@@ -80,5 +90,6 @@ Run the application
 
 `python app.py`
 
+More detailed logging
 
-[pki_cert_screenshot.png]: pki_cert_screenshot.png
+`LOG_LEVEL=DEBUG python app.py`
