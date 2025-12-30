@@ -35,21 +35,11 @@ class KafkaConfig:
 
 app = Flask(__name__)
 
-def kafka_consumer_thread(kafka_config: KafkaConfig, broker: int) -> None:
-    # Figure out which broker address to use
-    bootstrap_servers_to_use = None
-    if broker == 1:
-         bootstrap_servers_to_use = kafka_config.consumer_bootstrap_1
-    if broker == 2:
-        bootstrap_servers_to_use = kafka_config.consumer_bootstrap_2
-    if not bootstrap_servers_to_use:
-        logger.critical("Broker option sent to kafka_consumer_thread was not 1 or 2. No broker address to use. Cannot go on")
-        sys.exit(1)
-
+def kafka_consumer_thread(kafka_config: KafkaConfig, broker: str) -> None:
     """Background thread to consume Kafka messages"""
     consumer = KafkaConsumer(
         kafka_config.kafka_topic,
-        bootstrap_servers=bootstrap_servers_to_use,
+        bootstrap_servers=getattr(kafka_config, broker),
         security_protocol='SSL',
         ssl_certfile=kafka_config.ssl_cert_file,
         ssl_keyfile=kafka_config.ssl_key_file,
@@ -143,9 +133,9 @@ if __name__ == '__main__':
     # Start Kafka consumers in background threads
     # ServiceNow Hermes publishes two consumers and can switch between them
     # For redundancy. We need to monitor both.
-    consumer_thread_1 = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,1), daemon=True)
+    consumer_thread_1 = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,"consumer_bootstrap_1"), daemon=True)
     consumer_thread_1.start()
-    consumer_thread_2 = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,2), daemon=True)
+    consumer_thread_2 = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,"consumer_bootstrap_2"), daemon=True)
     consumer_thread_2.start()
     
     app.config['KAFKA_TOPIC'] = kafka_config.kafka_topic
