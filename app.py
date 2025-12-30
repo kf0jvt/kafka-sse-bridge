@@ -1,5 +1,5 @@
 from kafka import KafkaConsumer
-from flask import Flask, Response
+from flask import Flask, Response, send_from_directory
 import json
 import queue
 import threading
@@ -75,6 +75,14 @@ def event_stream() -> Generator[str, None, None]:
         # Format as SSE
         yield f"data: {message}\n\n"
 
+@app.route('/')
+def index() -> Response:
+    return send_from_directory('.', 'index.html')
+
+@app.route('/static/<path:filename>')
+def static_files(filename: str) -> Response:
+    return send_from_directory('static', filename)
+
 @app.route('/events')
 def sse() -> Response:
     """SSE endpoint for clients to connect"""
@@ -83,7 +91,8 @@ def sse() -> Response:
 @app.route('/health')
 def health() -> Response:
     """Health check endpoint"""
-    return {'status': 'ok'}
+    topic = app.config.get('KAFKA_TOPIC')
+    return {'status': 'ok', 'kafka_topic': topic}
 
 if __name__ == '__main__':
     # Load environment from .env file
@@ -139,6 +148,8 @@ if __name__ == '__main__':
     consumer_thread_2 = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,2), daemon=True)
     consumer_thread_2.start()
     
+    app.config['KAFKA_TOPIC'] = kafka_config.kafka_topic
+
     # Start Flask server
     print("Starting SSE server on http://0.0.0.0:8000")
     print("Connect to http://localhost:8000/events to receive messages")
