@@ -152,5 +152,5 @@ if __name__ == '__main__':
 
     # Start Flask server
     print("Starting SSE server on http://0.0.0.0:8000")
-    print("Connect to http://localhost:8000/events to receive messages")
+    print("Connect to http://localhost:8000/ to receive messages")
     app.run(host='0.0.0.0', port=8000, threaded=True)

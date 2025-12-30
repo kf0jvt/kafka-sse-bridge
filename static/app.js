@@ -32,57 +32,115 @@ const messagesContainer = document.getElementById('messages');
 // Counter for message IDs
 let messageCount = 0;
 
-// Handle incoming messages
-eventSource.onmessage = function(event) {
+// Filter variables
+let activeFilter = '';
+let allMessages = []; // Store all messages for filtering
+
+// Filter functionality
+document.getElementById('apply-filter').addEventListener('click', applyFilter);
+document.getElementById('clear-filter').addEventListener('click', clearFilter);
+document.getElementById('filter-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        applyFilter();
+    }
+});
+
+function applyFilter() {
+    const filterInput = document.getElementById('filter-input');
+    activeFilter = filterInput.value.trim();
+    
+    if (activeFilter === '') {
+        return;
+    }
+    
+    // Clear and redisplay filtered messages
+    messagesContainer.innerHTML = '';
+    allMessages.forEach(msg => {
+        if (msg.content.toLowerCase().includes(activeFilter.toLowerCase())) {
+            displayMessage(msg.content, msg.timestamp, msg.type);
+        }
+    });
+}
+
+function clearFilter() {
+    activeFilter = '';
+    document.getElementById('filter-input').value = '';
+    
+    // Clear and redisplay all messages
+    messagesContainer.innerHTML = '';
+    allMessages.forEach(msg => {
+        displayMessage(msg.content, msg.timestamp, msg.type);
+    });
+}
+
+function highlightText(text, filter) {
+    if (!filter) return text;
+    
+    const regex = new RegExp(`(${filter})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+}
+
+function displayMessage(content, timestamp, type = 'message') {
+    // Check if message should be displayed based on filter
+    if (activeFilter && !content.toLowerCase().includes(activeFilter.toLowerCase())) {
+        return;
+    }
+    
     messageCount++;
     
-    // Create a new div for the message
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message';
+    messageDiv.className = `message ${type}`;
     messageDiv.setAttribute('data-message-id', messageCount);
     
-    // Add timestamp
-    const timestamp = new Date().toLocaleTimeString();
     const timestampSpan = document.createElement('span');
     timestampSpan.className = 'timestamp';
     timestampSpan.textContent = `[${timestamp}] `;
     
-    // Add message content
     const contentSpan = document.createElement('span');
     contentSpan.className = 'content';
-    contentSpan.textContent = event.data;
+    contentSpan.innerHTML = highlightText(content, activeFilter);
     
     messageDiv.appendChild(timestampSpan);
     messageDiv.appendChild(contentSpan);
     
-    // Add to the container (newest at top)
     messagesContainer.insertBefore(messageDiv, messagesContainer.firstChild);
     
-    // Optional: limit the number of messages displayed
     const maxMessages = 1000;
     if (messagesContainer.children.length > maxMessages) {
         messagesContainer.removeChild(messagesContainer.lastChild);
     }
+}
+
+// Handle incoming messages
+eventSource.onmessage = function(event) {
+    const timestamp = new Date().toLocaleTimeString();
+    
+    // Store message
+    allMessages.unshift({
+        content: event.data,
+        timestamp: timestamp,
+        type: 'message'
+    });
+    
+    // Limit stored messages
+    if (allMessages.length > 1000) {
+        allMessages.pop();
+    }
+    
+    // Display message
+    displayMessage(event.data, timestamp, 'message');
 };
 
 // Handle connection errors
 eventSource.onerror = function(error) {
     console.error('EventSource error:', error);
-    
-    // Create error message
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'message error';
-    errorDiv.textContent = `Connection error occurred. Attempting to reconnect...`;
-    messagesContainer.insertBefore(errorDiv, messagesContainer.firstChild);
+    const timestamp = new Date().toLocaleTimeString();
+    displayMessage('Connection error occurred. Attempting to reconnect...', timestamp, 'error');
 };
 
 // Handle connection open
 eventSource.onopen = function() {
     console.log('Connected to SSE stream');
-    
-    // Create connection message
-    const connectDiv = document.createElement('div');
-    connectDiv.className = 'message info';
-    connectDiv.textContent = `Connected to Kafka stream at ${new Date().toLocaleTimeString()}`;
-    messagesContainer.insertBefore(connectDiv, messagesContainer.firstChild);
+    const timestamp = new Date().toLocaleTimeString();
+    displayMessage('Connected to Kafka stream', timestamp, 'info');
 };

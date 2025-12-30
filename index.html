@@ -18,7 +18,15 @@
         </div>
         <div class="controls-panel">
             <h2>Controls</h2>
-            <p>Additional controls and filters will be added here.</p>
+            <div class="filter-section">
+                <label for="filter-input">Filter:</label>
+                <input type="text" id="filter-input" placeholder="Enter text to filter...">
+                <div class="filter-buttons">
+                    <button id="apply-filter" class="btn btn-primary">Apply Filter</button>
+                    <button id="clear-filter" class="btn btn-secondary">Clear Filter</button>
+                </div>
+            </div>
+            <p class="help-text">Enter text to filter messages. Only messages containing the filter text will be displayed.</p>
         </div>
     </div>
     <script src="/static/app.js"></script>
