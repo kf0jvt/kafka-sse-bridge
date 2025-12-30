@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Generator
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(funcName)s: %(message)s"
 )
 
 # Queue to pass messages from Kafka consumer to SSE clients
@@ -29,11 +29,21 @@ class KafkaConfig:
 
 app = Flask(__name__)
 
-def kafka_consumer_thread(kafka_config: KafkaConfig) -> None:
+def kafka_consumer_thread(kafka_config: KafkaConfig, broker: int) -> None:
+    # Figure out which broker address to use
+    bootstrap_servers_to_use = None
+    if broker == 1:
+         bootstrap_servers_to_use = kafka_config.consumer_bootstrap_1
+    if broker == 2:
+        bootstrap_servers_to_use = kafka_config.consumer_bootstrap_2
+    if not bootstrap_servers_to_use:
+        logging.critical("Broker option sent to kafka_consumer_thread was not 1 or 2. No broker address to use. Cannot go on")
+        sys.exit(1)
+
     """Background thread to consume Kafka messages"""
     consumer = KafkaConsumer(
         kafka_config.kafka_topic,
-        bootstrap_servers=kafka_config.consumer_bootstrap_2,
+        bootstrap_servers=bootstrap_servers_to_use,
         security_protocol='SSL',
         ssl_certfile=kafka_config.ssl_cert_file,
         ssl_keyfile=kafka_config.ssl_key_file,
@@ -115,9 +125,13 @@ if __name__ == '__main__':
                                ssl_key_file, 
                                ssl_ca_file)
 
-    # Start Kafka consumer in background thread
-    consumer_thread = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,), daemon=True)
-    consumer_thread.start()
+    # Start Kafka consumers in background threads
+    # ServiceNow Hermes publishes two consumers and can switch between them
+    # For redundancy. We need to monitor both.
+    consumer_thread_1 = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,1), daemon=True)
+    consumer_thread_1.start()
+    consumer_thread_2 = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,2), daemon=True)
+    consumer_thread_2.start()
     
     # Start Flask server
     print("Starting SSE server on http://0.0.0.0:8000")
