@@ -94,7 +94,6 @@ if __name__ == '__main__':
     for variable_name in ["CONSUMER_BOOTSTRAP_1", 
                           "CONSUMER_BOOTSTRAP_2", 
                           "KAFKA_TOPIC",
-                          "KEYSTORE_PASSWORD",
                           "SSL_CERT_FILE",
                           "SSL_KEY_FILE",
                           "SSL_CA_FILE"]:
