@@ -40,7 +40,7 @@ openssl pkcs12 -in keystore.p12 -nokeys \
 # Application setup
 Initialize your python environment 
 
-`source bin/ativate`
+`source bin/activate`
 
 Install app dependencies with
 
