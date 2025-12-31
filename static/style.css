@@ -156,6 +156,16 @@ body {
     gap: 0.5rem;
 }
 
+.clear-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #ecf0f1;
+}
+
+.clear-section button {
+    width: 100%;
+}
+
 .btn {
     padding: 0.5rem 1rem;
     border: none;
@@ -183,6 +193,15 @@ body {
 
 .btn-secondary:hover {
     background-color: #7f8c8d;
+}
+
+.btn-warning {
+    background-color: #e67e22;
+    color: white;
+}
+
+.btn-warning:hover {
+    background-color: #d35400;
 }
 
 .help-text {

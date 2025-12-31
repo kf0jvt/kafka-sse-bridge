@@ -39,6 +39,7 @@ let allMessages = []; // Store all messages for filtering
 // Filter functionality
 document.getElementById('apply-filter').addEventListener('click', applyFilter);
 document.getElementById('clear-filter').addEventListener('click', clearFilter);
+document.getElementById('clear-messages').addEventListener('click', clearAllMessages);
 document.getElementById('filter-input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         applyFilter();
@@ -71,6 +72,21 @@ function clearFilter() {
     allMessages.forEach(msg => {
         displayMessage(msg.content, msg.timestamp, msg.type);
     });
+}
+
+function clearAllMessages() {
+    // Clear the display
+    messagesContainer.innerHTML = '';
+    
+    // Clear stored messages
+    allMessages = [];
+    
+    // Reset message counter
+    messageCount = 0;
+    
+    // Add confirmation message
+    const timestamp = new Date().toLocaleTimeString();
+    displayMessage('Messages cleared. New messages will continue to appear.', timestamp, 'info');
 }
 
 function highlightText(text, filter) {
