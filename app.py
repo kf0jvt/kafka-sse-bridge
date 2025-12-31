@@ -133,10 +133,15 @@ if __name__ == '__main__':
     # Start Kafka consumers in background threads
     # ServiceNow Hermes publishes two consumers and can switch between them
     # For redundancy. We need to monitor both.
-    consumer_thread_1 = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,"consumer_bootstrap_1"), daemon=True)
-    consumer_thread_1.start()
-    consumer_thread_2 = threading.Thread(target=kafka_consumer_thread, args=(kafka_config,"consumer_bootstrap_2"), daemon=True)
-    consumer_thread_2.start()
+    consumer_ids = ["consumer_bootstrap_1", "consumer_bootstrap_2"]
+    consumer_threads = [
+        threading.Thread(
+            target=kafka_consumer_thread,
+            args=(kafka_config, consumer_id),
+            daemon=True
+        ).start()
+        for consumer_id in consumer_ids
+    ]
     
     app.config['KAFKA_TOPIC'] = kafka_config.kafka_topic
 
