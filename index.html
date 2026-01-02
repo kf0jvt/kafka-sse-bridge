@@ -28,6 +28,15 @@
             </div>
             <p class="help-text">Enter text to filter messages. Only messages containing the filter text will be displayed.</p>
             
+            <div class="toggle-section">
+                <label for="hide-internal-toggle">Hide internal API requests:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="hide-internal-toggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <p class="help-text">Hide requests from internal IPs (10.x.x.x) to /api/now/v1 endpoints.</p>
+            </div>
+            
             <div class="clear-section">
                 <button id="clear-messages" class="btn btn-warning">Clear Messages</button>
                 <p class="help-text">Clear all messages from the display. New messages will continue to appear.</p>

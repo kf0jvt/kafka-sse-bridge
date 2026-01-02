@@ -34,6 +34,7 @@ let messageCount = 0;
 
 // Filter variables
 let activeFilter = '';
+let hideInternalAPI = false;
 let allMessages = []; // Store all messages for filtering
 
 // Filter functionality
@@ -46,6 +47,53 @@ document.getElementById('filter-input').addEventListener('keypress', function(e)
     }
 });
 
+// Toggle for hiding internal API requests
+document.getElementById('hide-internal-toggle').addEventListener('change', function(e) {
+    hideInternalAPI = e.target.checked;
+    refreshDisplay();
+});
+
+function isInternalAPIRequest(content) {
+    try {
+        const logData = JSON.parse(content);
+        
+        // Check if remote_ip starts with "10." and url starts with "/api/now/v1"
+        if (logData.remote_ip && logData.url) {
+            const isInternalIP = logData.remote_ip.startsWith('10.');
+            const isAPIEndpoint = logData.url.startsWith('/api/now/v1');
+            return isInternalIP && isAPIEndpoint;
+        }
+        return false;
+    } catch (error) {
+        // If it's not valid JSON, don't filter it
+        return false;
+    }
+}
+
+function shouldDisplayMessage(content) {
+    // Check text filter
+    if (activeFilter && !content.toLowerCase().includes(activeFilter.toLowerCase())) {
+        return false;
+    }
+    
+    // Check internal API filter
+    if (hideInternalAPI && isInternalAPIRequest(content)) {
+        return false;
+    }
+    
+    return true;
+}
+
+function refreshDisplay() {
+    // Clear and redisplay all messages based on current filters
+    messagesContainer.innerHTML = '';
+    allMessages.forEach(msg => {
+        if (shouldDisplayMessage(msg.content)) {
+            displayMessage(msg.content, msg.timestamp, msg.type);
+        }
+    });
+}
+
 function applyFilter() {
     const filterInput = document.getElementById('filter-input');
     activeFilter = filterInput.value.trim();
@@ -54,24 +102,14 @@ function applyFilter() {
         return;
     }
     
-    // Clear and redisplay filtered messages
-    messagesContainer.innerHTML = '';
-    allMessages.forEach(msg => {
-        if (msg.content.toLowerCase().includes(activeFilter.toLowerCase())) {
-            displayMessage(msg.content, msg.timestamp, msg.type);
-        }
-    });
+    refreshDisplay();
 }
 
 function clearFilter() {
     activeFilter = '';
     document.getElementById('filter-input').value = '';
     
-    // Clear and redisplay all messages
-    messagesContainer.innerHTML = '';
-    allMessages.forEach(msg => {
-        displayMessage(msg.content, msg.timestamp, msg.type);
-    });
+    refreshDisplay();
 }
 
 function clearAllMessages() {
@@ -97,8 +135,8 @@ function highlightText(text, filter) {
 }
 
 function displayMessage(content, timestamp, type = 'message') {
-    // Check if message should be displayed based on filter
-    if (activeFilter && !content.toLowerCase().includes(activeFilter.toLowerCase())) {
+    // Check if message should be displayed based on filters
+    if (!shouldDisplayMessage(content)) {
         return;
     }
     
