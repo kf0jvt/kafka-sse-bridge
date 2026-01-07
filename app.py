@@ -35,6 +35,38 @@ class KafkaConfig:
 
 app = Flask(__name__)
 
+def evaluate_impersonate(message: dict) -> dict:
+    """
+    Evaluate if a message indicates impersonation and add analysis.
+        
+    Returns:
+        Dictionary with updated analysis if impersonation detected
+    """
+    
+    # Check if message has _is_impersonating set to true
+    if message.get("_is_impersonating", "false") == "true":
+        message.setdefault('analysis', []).append('impersonation')
+    
+    return message
+
+def evaluate_internal_api(message: dict) -> dict:
+    """
+    Evaluate if a message indicates impersonation and add analysis.
+        
+    Returns:
+        Dictionary with updated analysis if impersonation detected
+    """
+    # Check if message has an internal ip address
+    internal_ip = message.get("remote_ip", "").startswith("10.")
+
+    # Check if message url is an api endpoint
+    api_endpoint = message.get("url","").startswith("/api/now/v1")
+
+    if internal_ip and api_endpoint:
+        message.setdefault('analysis', []).append('internal_api')
+    
+    return message
+
 def kafka_consumer_thread(kafka_config: KafkaConfig, broker: str) -> None:
     """Background thread to consume Kafka messages"""
     consumer = KafkaConsumer(
@@ -54,8 +86,13 @@ def kafka_consumer_thread(kafka_config: KafkaConfig, broker: str) -> None:
     
     for message in consumer:
         logger.debug(f"Received message: {message.value}")
+
+        message_parsed = json.loads(message.value)
+        message_parsed = evaluate_internal_api(message_parsed)
+        message_parsed = evaluate_impersonate(message_parsed)
+
         # Put message in queue for all SSE clients
-        message_queue.put(message.value)
+        message_queue.put(message_parsed)
 
 def event_stream() -> Generator[str, None, None]:
     """Generator function for SSE events"""
