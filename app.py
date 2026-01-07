@@ -67,6 +67,12 @@ def evaluate_internal_api(message: dict) -> dict:
     
     return message
 
+# Define a list of evaluator functions that will enrich messages received from Kafka
+EVALUATORS = [
+    evaluate_internal_api,
+    evaluate_impersonate,
+]
+
 def kafka_consumer_thread(kafka_config: KafkaConfig, broker: str) -> None:
     """Background thread to consume Kafka messages"""
     consumer = KafkaConsumer(
@@ -88,8 +94,10 @@ def kafka_consumer_thread(kafka_config: KafkaConfig, broker: str) -> None:
         logger.debug(f"Received message: {message.value}")
 
         message_parsed = json.loads(message.value)
-        message_parsed = evaluate_internal_api(message_parsed)
-        message_parsed = evaluate_impersonate(message_parsed)
+
+        # Apply all evaluators in sequence
+        for evaluator in EVALUATORS:
+            message_parsed = evaluator(message_parsed)
 
         # Put message in queue for all SSE clients
         message_queue.put(message_parsed)
