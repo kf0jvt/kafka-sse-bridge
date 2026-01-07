@@ -57,11 +57,9 @@ function isInternalAPIRequest(content) {
     try {
         const logData = JSON.parse(content);
         
-        // Check if remote_ip starts with "10." and url starts with "/api/now/v1"
-        if (logData.remote_ip && logData.url) {
-            const isInternalIP = logData.remote_ip.startsWith('10.');
-            const isAPIEndpoint = logData.url.startsWith('/api/now/v1');
-            return isInternalIP && isAPIEndpoint;
+        // Check if 'analysis' key exists and contains 'internal_api'
+        if (logData.analysis && Array.isArray(logData.analysis)) {
+            return logData.analysis.includes('internal_api');
         }
         return false;
     } catch (error) {

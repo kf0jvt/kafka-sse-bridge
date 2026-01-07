@@ -108,7 +108,7 @@ def event_stream() -> Generator[str, None, None]:
         # Block until a message is available
         message = message_queue.get()
         # Format as SSE
-        yield f"data: {message}\n\n"
+        yield f"data: {json.dumps(message)}\n\n"
 
 @app.route('/')
 def index() -> Response:
