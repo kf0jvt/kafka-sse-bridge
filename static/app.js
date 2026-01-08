@@ -68,6 +68,20 @@ function isInternalAPIRequest(content) {
     }
 }
 
+function hasImpersonation(content) {
+    try {
+        const logData = JSON.parse(content);
+        
+        // Check if 'analysis' key exists and contains 'impersonation'
+        if (logData.analysis && Array.isArray(logData.analysis)) {
+            return logData.analysis.includes('impersonation');
+        }
+        return false;
+    } catch (error) {
+        return false;
+    }
+}
+
 function shouldDisplayMessage(content) {
     // Check text filter
     if (activeFilter && !content.toLowerCase().includes(activeFilter.toLowerCase())) {
@@ -143,6 +157,11 @@ function displayMessage(content, timestamp, type = 'message') {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
     messageDiv.setAttribute('data-message-id', messageCount);
+
+    // Check for impersonation and add alert class
+    if (hasImpersonation(content)) {
+        messageDiv.classList.add('alert');
+    }
     
     const timestampSpan = document.createElement('span');
     timestampSpan.className = 'timestamp';

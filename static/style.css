@@ -104,6 +104,11 @@ body {
     background-color: #e8f8f5;
 }
 
+.message.alert {
+    background-color: #ffcccb;
+}
+
+
 .controls-panel {
     flex: 1;
     background-color: white;
