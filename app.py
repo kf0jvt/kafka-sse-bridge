@@ -60,7 +60,9 @@ def evaluate_internal_api(message: dict) -> dict:
     internal_ip = message.get("remote_ip", "").startswith("10.")
 
     # Check if message url is an api endpoint
-    api_endpoint = message.get("url","").startswith("/api/now/v1")
+    api_endpoint = any([message.get("url","").startswith("/api/now/v1"),
+                        message.get("url","").startswith("api/sn_kmf")
+    ])
 
     if internal_ip and api_endpoint:
         message.setdefault('analysis', []).append('internal_api')
